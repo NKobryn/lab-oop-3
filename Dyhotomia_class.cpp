@@ -1,8 +1,9 @@
 #include "Dyhotomia_class.h"
 #include <cmath>
-#include <stdexcept>
+#include <limits>
 
-Dyhotomia_class::Dyhotomia_class() : a(0), b(0), eps(1e-6) {}
+Dyhotomia_class::Dyhotomia_class() {}
+
 Dyhotomia_class::~Dyhotomia_class() {}
 
 void Dyhotomia_class::setVolumes(double vol_a, double vol_b) {
@@ -14,50 +15,77 @@ void Dyhotomia_class::setTolerance(double vol_eps) {
     eps = vol_eps;
 }
 
-double Dyhotomia_class::func(double x) const {
+double Dyhotomia_class::f(double x) {
     return x + sqrt(x) + cbrt(x) - 2.5;
 }
 
-double Dyhotomia_class::derivative(double x) const {
-    return 1.0 + (1.0 / (2.0 * sqrt(x))) + (1.0 / (3.0 * cbrt(x * x)));
-}
+int Dyhotomia_class::count(double &x) {
+    double fa = f(a);
+    double fb = f(b);
 
-double Dyhotomia_class::solveByDichotomy() {
-    double left = a;
-    double right = b;
+    if (fa * fb >= 0) return 1;
 
-    while ((right - left) / 2 > eps) {
-        double middle = (left + right) / 2.0;
-        if (func(middle) == 0.0) {
-            return middle;
-        }
-        if (func(left) * func(middle) < 0) {
-            right = middle;
+    double c;
+    while ((b - a) >= eps) {
+        c = (a + b) / 2.0;
+        double fc = f(c);
+
+        if (fa * fc < 0) {
+            b = c;
+            fb = fc;
         } else {
-            left = middle;
+            a = c;
+            fa = fc;
         }
     }
 
-    return (left + right) / 2.0;
+    x = (a + b) / 2.0;
+    return 0;
 }
 
-double Dyhotomia_class::solveByNewton() const {
-    double x = (a + b) / 2;
-    double delta = eps;
+Newton_class::Newton_class() {}
 
-    while (fabs(func(x)) > eps) {
-        double fx = func(x);
-        double dfx = (func(x + delta) - func(x - delta)) / (2 * delta);
+Newton_class::~Newton_class() {}
 
-        if (fabs(dfx) < 1e-12) {
-            std::cerr << "Похідна дуже мала. Метод Ньютона може не працювати коректно.\n";
-            return x;
-        }
+void Newton_class::setVolumes(double vol_a, double vol_b) {
+    a = vol_a;
+    b = vol_b;
+}
+
+void Newton_class::setTolerance(double vol_eps) {
+    eps = vol_eps;
+}
+
+double Newton_class::f(double x) {
+    return x + sqrt(x) + cbrt(x) - 2.5;
+}
+
+double Newton_class::df(double x) {
+    return 1.0 + 1.0/(2.0*sqrt(x)) + 1.0/(3.0*pow(cbrt(x), 2));
+}
+
+int Newton_class::count_newton(double &x) {
+    x = (a + b) / 2.0;
+    int max_iter = 100;
+
+    for (int i = 0; i < max_iter; ++i) {
+        double fx = f(x);
+        double dfx = df(x);
+
+        if (fabs(dfx) < 1e-12) return 2;
 
         double x_new = x - fx / dfx;
 
+        if (x_new < a || x_new > b) {
+            x_new = (a + b) / 2.0;
+        }
+
+        if (fabs(x_new - x) < eps) {
+            x = x_new;
+            return 0;
+        }
         x = x_new;
     }
 
-    return x;
+    return 1;
 }

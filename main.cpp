@@ -1,18 +1,31 @@
 #include <iostream>
-#include <iomanip>
 #include "Dyhotomia_class.h"
 
 int main() {
-    Dyhotomia_class solver;
+    Dyhotomia_class* dyh = new Dyhotomia_class();
+    dyh->setVolumes(0.4, 1.0);
+    dyh->setTolerance(1e-6);
 
-    solver.setVolumes(0.4, 1.0);
-    solver.setTolerance(1e-6);
+    double x;
 
-    double rootDichotomy = solver.solveByDichotomy();
-    double rootNewton = solver.solveByNewton();
+    if (dyh->count(x) == 0) {
+        std::cout << "Метод дихотомії: корінь x = " << x << std::endl;
+    } else {
+        std::cout << "Метод дихотомії: не вдалося знайти корінь." << std::endl;
+    }
 
-    std::cout << "Дихотомія: " << std::setprecision(5) << rootDichotomy << std::endl;
-    std::cout << "Ньютона: " << std::setprecision(5) << rootNewton << std::endl;
+    Newton_class* newton = new Newton_class();
+    newton->setVolumes(0.4, 1.0);
+    newton->setTolerance(1e-6);
+
+    if (newton->count_newton(x) == 0) {
+        std::cout << "Метод Ньютона: корінь x = " << x << std::endl;
+    } else {
+        std::cout << "Метод Ньютона: не вдалося знайти корінь." << std::endl;
+    }
+
+    delete dyh;
+    delete newton;
 
     return 0;
 }
